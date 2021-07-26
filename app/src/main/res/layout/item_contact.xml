@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/each_contact_layout"
+    android:layout_width="match_parent"
+    android:layout_margin="12dp"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/initial"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true" />
+
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toEndOf="@+id/initial"
+        android:layout_toRightOf="@+id/initial"
+        android:layout_marginLeft="20dp"
+        android:paddingEnd="16dp"
+        android:paddingRight="16dp">
+<!--        tools:ignore="RtlSymmetry">-->
+
+        <TextView
+            android:id="@+id/Contact_Name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:singleLine="true"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@color/black"/>
+        <TextView
+            android:id="@+id/Contact_Number"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/Contact_Name"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:lines="1"
+            android:singleLine="true" />
+    </RelativeLayout>
+
+</RelativeLayout>
