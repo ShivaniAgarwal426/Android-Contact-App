@@ -23,28 +23,47 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <!--    saved details-->
-    <ImageView
-        android:id="@+id/contact_image"
+    <RelativeLayout
+        android:id="@+id/layout"
         android:layout_below="@id/toolbar_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@drawable/person3"
         android:background="@color/baby_pink"
-        android:scaleType="fitCenter"
-        android:paddingTop="20dp"
-        android:paddingBottom="50dp"/>
+        android:paddingBottom="20dp">
+        <ImageView
+            android:id="@+id/upload_image"
+            android:layout_width="160dp"
+            android:layout_height="160dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/person2"
+            android:layout_centerInParent="true"/>
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/addPhoto"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/upload_image"
+            android:layout_marginLeft="-30dp"
+            android:layout_marginTop="15dp"
+            android:layout_toRightOf="@id/upload_image"
+            app:backgroundTint="@color/white"
+            android:src="@drawable/ic_add_photo" />
+    </RelativeLayout>
+
+
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/neu_background"
-        android:layout_below="@id/contact_image"/>
+        android:layout_below="@id/layout"/>
     <LinearLayout
         android:id="@+id/name_section"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/contact_image"
+        android:layout_below="@id/layout"
         android:layout_marginTop="-26dp"
-        android:gravity="center_horizontal">
+        android:paddingLeft="40dp"
+        android:paddingRight="20dp">
         <ImageView
             android:id="@+id/initial"
             android:layout_width="50dp"
@@ -57,7 +76,7 @@
             android:id="@+id/contact_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@id/contact_image"
+            android:layout_below="@id/layout"
             android:layout_gravity="center_vertical"
             android:layout_marginLeft="20dp"
             android:text="Shivani"

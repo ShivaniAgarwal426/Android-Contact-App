@@ -1,5 +1,6 @@
 package com.example.contactandroidapp;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -12,13 +13,17 @@ import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -29,12 +34,24 @@ import com.amulyakhare.textdrawable.util.ColorGenerator;
 import com.example.contactandroidapp.ContactTable.ContactDatabase;
 import com.example.contactandroidapp.ContactTable.Interface.ContactDao;
 import com.example.contactandroidapp.ContactTable.Model.ContactEntity;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-public class CallMessageActivity extends AppCompatActivity {
+public class CallMessageActivity extends AppCompatActivity implements View.OnClickListener {
     TextView contact_name, contact_number, contact_email, contact_address;
     ImageView initial_img;
     Toolbar toolbar;
     Button call, message;
+    //    for uploding images in contact
+    ImageView uploadImage;
+    FloatingActionButton addPhoto;
+    final int[] selectedItem = {-1};
+    private Uri uri;
+    private Bitmap bitmap;
+    /**
+     * Code to access whether to select from gallery or to click image
+     **/
+    private static int CHOOSE_FROM_GALLERY_CODE = 1;
+    private static int CLICK_IMAGE_CODE = 2;
 
     // the DAO to access database from table
     ContactEntity contactDetails;
@@ -89,14 +106,29 @@ public class CallMessageActivity extends AppCompatActivity {
         contact_address = findViewById(R.id.contact_address);
         initial_img = findViewById(R.id.initial);
 
+        uploadImage = findViewById(R.id.upload_image);
+        addPhoto = findViewById(R.id.addPhoto);
+
         call = findViewById(R.id.callbtn);
         message = findViewById(R.id.messagebtn);
+
+//        onClick on uploadImage and addPhoto
+
+        uploadImage.setOnClickListener(this);
+        addPhoto.setOnClickListener(this);
+
 //         on below line adding click listener for our calling image view.
         call.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // calling a method to make a call.
-                 makeCall(contactDetails.getPhone());
+                if (contactDetails.getPhone().length() > 10) {
+                    String callANumber = contactDetails.getPhone().substring(2).trim();
+                    Log.i("call10digitNumber", callANumber);
+                    makeCall(callANumber);
+                } else {
+                    makeCall(contactDetails.getPhone());
+                }
             }
         });
 
@@ -105,7 +137,7 @@ public class CallMessageActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // calling a method to send message
-                 sendMessage(contactDetails.getPhone());
+                sendMessage(contactDetails.getPhone().toString());
             }
         });
 
@@ -127,6 +159,8 @@ public class CallMessageActivity extends AppCompatActivity {
                 .endConfig()
                 .buildRound(contactDetails.getFirstname().substring(0, 1).toUpperCase() + contactDetails.getLastname().substring(0, 1).toUpperCase(), color);
         initial_img.setImageDrawable(drawable_initial);
+
+
     }
 
 
@@ -181,7 +215,7 @@ public class CallMessageActivity extends AppCompatActivity {
                 // Always use string resources for UI text.
 //                contactDetails.getId();
                 // Create intent to show chooser
-                shareIntent.putExtra(Intent.EXTRA_TEXT, "Name: "+contactDetails.getFirstname().toString()+" "+contactDetails.getLastname()+"\nEmail: "+contactDetails.getEmail()+"\nContact Number: "+contactDetails.getPhone()+"\nAddress: "+contactDetails.getAddress());
+                shareIntent.putExtra(Intent.EXTRA_TEXT, "Name: " + contactDetails.getFirstname().toString() + " " + contactDetails.getLastname() + "\nEmail: " + contactDetails.getEmail() + "\nContact Number: " + contactDetails.getPhone() + "\nAddress: " + contactDetails.getAddress());
                 Intent chooser = Intent.createChooser(shareIntent, "Share");
                 // Try to invoke the intent.
                 try {
@@ -200,25 +234,82 @@ public class CallMessageActivity extends AppCompatActivity {
         // in this method we are calling an intent to send sms.
         // on below line we are passing our contact number.
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("sms:" + contactNumber));
-        intent.putExtra("sms_body", " ");
+        intent.putExtra("sms_body", "");
         startActivity(intent);
     }
 
     private void makeCall(String contactNumber) {
-        // this method is called for making a call.
+        Log.i("callme", contactNumber);
         // on below line we are calling an intent to make a call.
         Intent callIntent = new Intent(Intent.ACTION_CALL);
         // on below line we are setting data to it.
-        callIntent.setData(Uri.parse("tel:" + contactNumber));
+        callIntent.setData(Uri.parse("tel:" + contactNumber.trim()));
+//        if(countDigitfor10(Integer.parseInt(contactNumber)) == 10){
         // on below line we are checking if the calling permissions are granted not.
-        /**
-//        if (ActivityCompat.checkSelfPermission(this,
-//                Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
-//            return;
-//        }
-         **/
-        // at last we are starting activity.
-        startActivity(callIntent);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CALL_PHONE}, 1);
+//                return;
+        } else {
+            // at last we are starting activity to make phone call.
+            startActivity(callIntent);
+        }
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v == uploadImage || v == addPhoto) {
+            // list of the items to be displayed to the user in the form of list so that user can select the item from
+            final String[] list = new String[]{"Choose Image from Gallery", "Click and Upload"};
+
+            AlertDialog.Builder upload_image_dialog = new AlertDialog.Builder(this)
+                    .setIcon(R.drawable.ic_add_photo)
+                    .setTitle("Upload Image")
+                    .setSingleChoiceItems(list, selectedItem[0], new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            selectedItem[0] = which;    /** selectedItem[0] == 1st option , selectedItem[1] == 2nd option **/
+                            Toast.makeText(CallMessageActivity.this, "Selected option " + list[which] + " " + selectedItem + " " + which, Toast.LENGTH_SHORT).show();
+                            if (which == 0 && list[which] == "Choose Image from Gallery") {
+//                                CallMessageActivity.this.onClick( );
+                                Intent pickImageIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                                startActivityForResult(pickImageIntent, CHOOSE_FROM_GALLERY_CODE);
+
+                            }
+                            if (which == 1 && list[which] == "Click and Upload") {
+                                Intent captureImageIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                                startActivityForResult(captureImageIntent, CLICK_IMAGE_CODE);
+                            }
+
+                            dialog.dismiss();
+                        }
+                    });
+            upload_image_dialog.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();
+                }
+            });
+            // create and build the AlertDialog instance with the AlertDialog builder instance
+            AlertDialog imageDialog = upload_image_dialog.create();
+            imageDialog.show();
+
+        }
+    }
+//    for image to be uploaded from gallery then uri else from capture than bitmap
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == CHOOSE_FROM_GALLERY_CODE) {
+                uri = data.getData();
+                uploadImage.setImageURI(uri);
+                return;
+            }
+            if (requestCode == CLICK_IMAGE_CODE) {
+                bitmap = (Bitmap) data.getExtras().get("data");
+                uploadImage.setImageBitmap(bitmap);
+            }
+        }
     }
 //    @Override
 //    protected void onResume() {

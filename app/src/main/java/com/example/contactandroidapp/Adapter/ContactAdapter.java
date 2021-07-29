@@ -2,14 +2,18 @@ package com.example.contactandroidapp.Adapter;
 
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -22,26 +26,75 @@ import com.example.contactandroidapp.MainActivity;
 import com.example.contactandroidapp.R;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+/**
+for searchview filter ----->>
+1. implement Filterable
+2. declare a list of all contacts
+3. store all contact in that list using arraylist in contructor
+4.
 
-public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHolder> {
+ **/
+public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHolder> implements Filterable {
     private Context context;
-    private List<ContactEntity>  contactList;
+    private List<ContactEntity>  contactList,  filterllist;
+    ArrayList<ContactEntity> fullList;
     LayoutInflater inflater;
 
     public ContactAdapter(MainActivity context, List<ContactEntity> allContactList) {
         this.context = context;
         this.contactList = allContactList;
         this.inflater = LayoutInflater.from(context);           // dont know why
+        this.fullList = new ArrayList<>(allContactList);
+        this.filterllist = new ArrayList<>(allContactList);
+
     }
 
-    // below method is use for filtering data in our array list
-    public void filterList(ArrayList<ContactEntity> filterllist) {
-        // on below line we are passing filtered
-        // array list in our original array list
-        contactList = filterllist;
-        notifyDataSetChanged();
+//    // below method is use for filtering data in our array list
+//    public void filterList(ArrayList<ContactEntity> filterllist) {
+//        // on below line we are passing filtered
+//        // array list in our original array list
+//        contactList = filterllist;
+//        notifyDataSetChanged();
+//    }
+    @Override
+    public Filter getFilter() {
+        return filter;
     }
+    Filter filter = new Filter() {
+//        run on background
+        @Override
+        protected FilterResults performFiltering(CharSequence sequence) {
+            List<ContactEntity> filteredList = new ArrayList<>();
+            if(filteredList.toString().isEmpty()){
+                Toast.makeText(context, "No contact Found", Toast.LENGTH_SHORT).show();
+//                sequence empty then add fullList into empty filteredList
+                filteredList.addAll(fullList);
+            }else {
+                for (ContactEntity onecontact: fullList){
+                    if(onecontact.toString().toLowerCase().contains(sequence.toString().toLowerCase())){
+                        filteredList.add(onecontact);
+                    }
+                }
+            }
+            FilterResults filterResults = new FilterResults();
+            filterResults.values = filteredList;
+            return filterResults;
+//            this return will be pass to ui as a parameter
+        }
+//        run on ui
+        @Override
+        protected void publishResults(CharSequence sequence, FilterResults filterResults) {
+//            update ui
+            contactList.clear();
+            contactList.addAll((Collection<? extends ContactEntity>) filterResults.values);
+            Log.i("searchresult", String.valueOf(contactList.addAll((Collection<? extends ContactEntity>) filterResults.values)));
+            notifyDataSetChanged();
+            // goto onQueryTextChange() method and add one line.
+        }
+    };
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull  ViewGroup parent, int viewType) {
@@ -90,6 +143,8 @@ public class ContactAdapter extends RecyclerView.Adapter<ContactAdapter.ViewHold
     public int getItemCount() {
         return contactList.size();
     }
+
+
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         ImageView initial;

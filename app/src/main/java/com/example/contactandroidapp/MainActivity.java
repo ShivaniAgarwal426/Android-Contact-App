@@ -1,7 +1,9 @@
 package com.example.contactandroidapp;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.MenuItemCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.room.Room;
@@ -32,10 +34,9 @@ public class MainActivity extends AppCompatActivity {
     ContactDao dao;
     ContactDatabase database;
     /**
-     type to identity the intent if its for new contact or to edit contact
+     * type to identity the intent if its for new contact or to edit contact
      **/
-    private  static final String TYPE = "type";
-
+    private static final String TYPE = "type";
 
 
     @Override
@@ -50,8 +51,8 @@ public class MainActivity extends AppCompatActivity {
 
 //        2nd last
 /**          IMP IMP IMP
-          setup Database and get DAO      **/
-        database = Room.databaseBuilder(this,ContactDatabase.class,"contactDB")
+ setup Database and get DAO      **/
+        database = Room.databaseBuilder(this, ContactDatabase.class, "contactDB")
                 .allowMainThreadQueries()
                 .build();
         dao = database.getContactDao();
@@ -60,9 +61,9 @@ public class MainActivity extends AppCompatActivity {
 /**    setting layout and adapter   **/
         contact_recyclerView = findViewById(R.id.contact_list_rv);
         contact_recyclerView.setHasFixedSize(true);
-        contact_recyclerView.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false));
+        contact_recyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
-       // onResume() to show live data without using LiveData
+        // onResume() to show live data without using LiveData
 
 
 /**  add contacts  **/
@@ -70,11 +71,10 @@ public class MainActivity extends AppCompatActivity {
         fabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity( new Intent(MainActivity.this,AddEditContActivity.class).putExtra(TYPE,0));
+                startActivity(new Intent(MainActivity.this, AddEditContActivity.class).putExtra(TYPE, 0));
             }
         });
-
-        }
+    }
 
     @Override
     protected void onResume() {
@@ -83,8 +83,36 @@ public class MainActivity extends AppCompatActivity {
         List<ContactEntity> allContactList = dao.getAllContacts();
         Collections.reverse(allContactList);
 //        set data from adapter using ContactEntity in recyclerview
-        adapter = new ContactAdapter(this,allContactList);
+        adapter = new ContactAdapter(this, allContactList);
         contact_recyclerView.setAdapter(adapter);
 
+    }
+//    for searh view in action bar to filter recyclerview
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.search_item,menu);
+        MenuItem item = menu.findItem(R.id.search);
+        SearchView searchView = (SearchView) item.getActionView();
+//        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
+
+        /** IMP Lines **/
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                // on query submit we are clearing the focus for our search view.
+                searchView.clearFocus();
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                // added at last
+                adapter.getFilter().filter(newText.toLowerCase());
+                return false;
+            }
+        });
+//        ------>> then go to recyclerview adapter and implement Filterable
+        return super.onCreateOptionsMenu(menu);
     }
 }
